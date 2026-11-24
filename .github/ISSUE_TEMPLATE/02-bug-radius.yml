@@ -1,0 +1,109 @@
+name: 📻 RADIUS bug
+description: tac_plus-ng rejects a RADIUS request it should accept, returns the wrong attributes, or drops accounting.
+title: "[RADIUS]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for RADIUS traffic. tac_plus-ng speaks RADIUS over UDP,
+        TCP, DTLS and TLS, and supports PAP, CHAP, MS-CHAPv1, MS-CHAPv2 and
+        downloadable ACLs.
+
+        > ⚠️ **Redact before posting.** A packet capture and a configuration
+        > file both hold the shared secret, and a PAP request holds the
+        > password. Replace each secret with `<redacted>`.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Access-Request / Access-Accept / Access-Reject
+        - PAP
+        - CHAP
+        - MS-CHAPv1
+        - MS-CHAPv2
+        - Accounting (Accounting-Request / Accounting-Response)
+        - Reply attributes or vendor-specific attributes
+        - Downloadable ACL
+        - Dictionary (an attribute is not parsed, or is parsed wrongly)
+        - Listener or transport (the daemon never answers)
+        - Not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      options:
+        - RADIUS over UDP
+        - RADIUS over TCP
+        - RADIUS over DTLS
+        - RADIUS over TLS (RadSec)
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: RADIUS client
+      description: What sends the request, and its version.
+      placeholder: "FreeRADIUS 3.2 proxy, or radtest, or a Nokia SR Linux switch"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what did you expect?
+      placeholder: |
+        An MS-CHAPv2 Access-Request is rejected with "authentication failed".
+        The same user and password are accepted over TACACS+.
+    validations:
+      required: true
+  - type: textarea
+    id: request
+    attributes:
+      label: Request
+      description: The attributes sent, or the command that reproduces it. Redact the secret and the password.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: response
+    attributes:
+      label: Response
+      description: What came back, or "nothing" if the daemon did not answer.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: The smallest configuration that shows the problem, including the `listen` lines and any `radius-dict` entries. Remove every secret first.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Daemon log
+      description: "Add `debug = AUTHEN AUTHOR ACCT AV PACKET` to the part of the configuration that fails, reproduce, then copy the syslog records (for example `journalctl -t tac_plus-ng`)."
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The output of `tac_plus-ng -v`.
+      placeholder: "tac_plus-ng version 170ab88.../PCRE2/ARES 1.27.0/TLS/OpenSSL 3.0.13"
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and compiler
+      placeholder: "Ubuntu 24.04, gcc 13.2"
+    validations:
+      required: true

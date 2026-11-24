@@ -1,0 +1,95 @@
+name: ⚙️ Configuration or policy bug
+description: The configuration file is refused, is read differently from what the manual says, or a rule reaches the wrong verdict.
+title: "[Config]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form when the fault is in how the daemon reads a configuration
+        file or evaluates a rule, rather than in one protocol. `tac_plus-ng -P
+        <configuration file>` reads the file and quits, which separates a parse
+        problem from a runtime problem.
+
+        > ⚠️ **Redact before posting.** Remove every shared key, password and
+        > bind credential from the configuration you paste.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Parser (the file is refused, or the error message is wrong)
+        - Realms and realm inheritance
+        - Networks
+        - Devices (hosts)
+        - Users and groups
+        - Profiles
+        - Rulesets
+        - Access control lists
+        - Regular expressions
+        - Time ranges
+        - User name rewriting
+        - Logging and accounting destinations
+        - Listeners (`listen` blocks, ports, VRF)
+        - Type 6 password encryption
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of problem
+      options:
+        - A valid configuration is refused
+        - An invalid configuration is accepted
+        - The error message points at the wrong line, or does not say what is wrong
+        - A rule reaches the wrong verdict
+        - Inheritance does not work as the manual describes
+        - The manual and the daemon disagree
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what did you expect?
+      description: If the manual describes the behavior you expected, give the section number.
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: The smallest file that shows the problem. Someone must be able to paste it and reproduce.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: parse-output
+    attributes:
+      label: Output of tac_plus-ng -P
+      description: "`tac_plus-ng -P <configuration file>`"
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Daemon log
+      description: "For a wrong verdict, add `debug = PARSE CONFIG ACL REGEX CMD` and copy the syslog records."
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The output of `tac_plus-ng -v`.
+      placeholder: "tac_plus-ng version 170ab88.../PCRE2/ARES 1.27.0/TLS/OpenSSL 3.0.13"
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and compiler
+      placeholder: "Ubuntu 24.04, gcc 13.2"
+    validations:
+      required: true

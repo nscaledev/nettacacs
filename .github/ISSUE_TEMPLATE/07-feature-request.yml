@@ -1,0 +1,72 @@
+name: ✨ Feature request
+description: Suggest a new capability, or a change to an existing one.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      multiple: true
+      options:
+        - TACACS+
+        - RADIUS
+        - TLS, DTLS and RadSec
+        - Configuration language and policy
+        - MAVIS back ends
+        - Logging and accounting
+        - Process model (spawnd, workers, limits)
+        - Build system and packaging
+        - Test suite
+        - tac_plus (legacy)
+        - ftpd, tcprelay, mavisd
+        - Documentation and samples
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What you are trying to do, and what stops you today. Describe the need before the solution.
+      placeholder: "Our switches send an attribute that no profile can match, so every command authorization falls through to the default rule."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What you would like the daemon to do. A configuration snippet showing the syntax you have in mind helps.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and workarounds
+      description: Anything you have tried or considered, including what you do today instead.
+  - type: textarea
+    id: standards
+    attributes:
+      label: Standards and vendor documentation
+      description: The RFC, draft or vendor page that defines the behavior, if there is one.
+      placeholder: "RFC 8907 section 5.4"
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - Blocks a deployment
+        - Significant manual effort without it
+        - Nice to have
+    validations:
+      required: true
+  - type: dropdown
+    id: compat
+    attributes:
+      label: Would this change existing behavior?
+      options:
+        - No, it only adds something new
+        - Yes, existing configurations would behave differently
+        - Not sure
+    validations:
+      required: true

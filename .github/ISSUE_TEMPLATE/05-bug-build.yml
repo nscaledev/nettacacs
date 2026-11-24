@@ -1,0 +1,99 @@
+name: 🧱 Build, install or test-suite bug
+description: configure or make fails, a feature is left out of the build, or the test suite fails.
+title: "[Build]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for building, installing and testing. See
+        [PREREQUISITES.txt](https://github.com/nscaledev/nettacacs/blob/master/PREREQUISITES.txt)
+        for the libraries each feature needs, and
+        [tac_plus-ng/tests/README](https://github.com/nscaledev/nettacacs/blob/master/tac_plus-ng/tests/README)
+        for what the test suite needs.
+  - type: dropdown
+    id: step
+    attributes:
+      label: What were you doing?
+      options:
+        - ./configure
+        - make
+        - make install
+        - tac_plus-ng/tests/run-tests
+        - Building a package or a container image
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      multiple: true
+      options:
+        - tac_plus-ng
+        - tac_plus (legacy)
+        - spawnd
+        - mavisd
+        - The MAVIS libraries and helper programs
+        - ftpd
+        - tcprelay
+        - tactester
+        - The build system itself (configure, GNUmakefile, Makefile.inc)
+        - The test suite
+    validations:
+      required: true
+  - type: input
+    id: configure
+    attributes:
+      label: configure arguments
+      description: The whole command line you ran.
+      placeholder: "./configure --debug --minimum tac_plus-ng"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Command and output
+      description: The failing command and the error, with enough lines before it to show the context.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: test-output
+    attributes:
+      label: Test output
+      description: "For a test failure, the failing test and its output. `tac_plus-ng/tests/run-tests -k <test name>` runs one test. The work directory under `build/tests-work` holds the configuration and the log of each failed test."
+      render: text
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system
+      placeholder: "Ubuntu 24.04 on x86_64, or FreeBSD 14.1, or Alpine 3.20 in a container"
+    validations:
+      required: true
+  - type: input
+    id: toolchain
+    attributes:
+      label: Compiler and make
+      placeholder: "gcc 13.2, GNU make 4.3, perl 5.38"
+    validations:
+      required: true
+  - type: input
+    id: libraries
+    attributes:
+      label: Library versions
+      description: OpenSSL, PCRE2, c-ares and anything else the failure touches.
+      placeholder: "OpenSSL 3.0.13, PCRE2 10.42, c-ares 1.27.0"
+  - type: input
+    id: commit
+    attributes:
+      label: Commit
+      description: "`git rev-parse --short HEAD`, or the first line of LAST_COMMIT."
+    validations:
+      required: true

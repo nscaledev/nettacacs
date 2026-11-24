@@ -47,7 +47,7 @@ import os
 import struct
 import unittest
 
-from tactest import SOURCE, DaemonTestCase, radius
+from tactest import SOURCE, DaemonTestCase
 
 DICTIONARY = os.path.join(SOURCE, "tac_plus-ng", "sample", "radius-dict.cfg")
 
