@@ -74,8 +74,9 @@ env:
   #   the AppArmor profile of slapd confines it to /etc/ldap and /var/lib/ldap, the tests run it in the build tree
   # ldap-utils: test_ldapmavis_ad.py adds its users to the Samba AD DC with ldapadd
   # python3-ldap3: the Python LDAP back-end (mavis_tacplus_ldap.py) of test_ldapmavis_ad.py
-  # limit of tac_plus-ng/tests/run-tests: the Samba AD tests make the run longer than the default 600 s
-  TACTEST_TIMEOUT: 900
+  # limit of tac_plus-ng/tests/run-tests: the Samba AD tests make the run longer than the default 600 s;
+  # the GCC suite can take almost 900 s on a busy runner, and the sanitizer build is slower
+  TACTEST_TIMEOUT: 1200
   UBUNTU_PACKAGES: build-essential clang llvm perl libpcre2-dev libssl-dev libcrypt-dev python3 openssl libpam0g-dev libldap-dev libradcli-dev libc-ares-dev slapd libnet-ldap-perl libio-socket-ssl-perl iproute2 ldap-utils python3-ldap3
 
 jobs:
