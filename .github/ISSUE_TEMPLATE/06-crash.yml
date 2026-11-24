@@ -1,0 +1,110 @@
+name: 💥 Crash, hang or memory bug
+description: The daemon dies, stops answering, grows without limit, or a sanitizer reports a fault.
+title: "[Crash]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > 🔒 **Stop if a client can trigger this before it authenticates.** That
+        > is a vulnerability, not a bug report. Report it privately at
+        > [security advisories](https://github.com/nscaledev/nettacacs/security/advisories/new)
+        > and do not open a public issue.
+
+        For everything else, this form collects what a memory fault needs: the
+        input, the backtrace and, where you can build one, a sanitizer run.
+  - type: dropdown
+    id: symptom
+    attributes:
+      label: Symptom
+      options:
+        - The process dies (SIGSEGV, SIGABRT, SIGBUS)
+        - The process stops answering but stays alive
+        - Memory grows without limit
+        - File descriptors or worker processes are not released
+        - A sanitizer (ASan or UBSan) reported a fault
+        - Valgrind reported a fault
+        - The daemon spins at 100 percent CPU
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - tac_plus-ng
+        - tac_plus (legacy)
+        - spawnd
+        - mavisd
+        - A MAVIS helper program
+        - ftpd
+        - tcprelay
+        - Not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: reproducible
+    attributes:
+      label: How often does it happen?
+      options:
+        - Every time, with a known input
+        - Often, but not every time
+        - Once, under production load
+        - Only under a sanitizer or under Valgrind
+    validations:
+      required: true
+  - type: textarea
+    id: trigger
+    attributes:
+      label: What triggers it?
+      description: The traffic, the login or the configuration reload that leads to the fault. A test case or a packet capture is the fastest route to a fix.
+    validations:
+      required: true
+  - type: textarea
+    id: backtrace
+    attributes:
+      label: Backtrace or sanitizer report
+      description: "The whole report. For a core dump, `gdb <path to tac_plus-ng> <core file>` then `bt full` and `thread apply all bt`. Build with `-g` so that the frames carry names."
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: The configuration the daemon was running, with every secret removed.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Daemon log
+      description: "The records before the fault (for example `journalctl -t tac_plus-ng`)."
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The output of `tac_plus-ng -v`, or the equivalent for the other daemons.
+      placeholder: "tac_plus-ng version 170ab88.../PCRE2/ARES 1.27.0/TLS/OpenSSL 3.0.13"
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: How was it built?
+      description: The configure arguments, the compiler and any sanitizer flags.
+      placeholder: "./configure tac_plus-ng, clang 18 with -fsanitize=address,undefined"
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system
+      placeholder: "Ubuntu 24.04 on x86_64"
+    validations:
+      required: true

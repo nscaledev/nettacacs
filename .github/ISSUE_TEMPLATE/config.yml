@@ -1,0 +1,14 @@
+# Blank issues are disabled: every issue must come through one of the forms in
+# this directory, so it arrives with the daemon, the version and the evidence
+# needed to triage it.
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Security vulnerability
+    url: https://github.com/nscaledev/nettacacs/security/advisories/new
+    about: Report privately. Do not open a public issue for a vulnerability.
+  - name: 📚 Manuals
+    url: https://github.com/nscaledev/nettacacs/tree/master/doc
+    about: The manuals for tac_plus-ng, spawnd, mavis and the legacy daemons. Worth a look before filing.
+  - name: ⚙️ Sample configurations
+    url: https://github.com/nscaledev/nettacacs/tree/master/tac_plus-ng/sample
+    about: Working configurations for TACACS+, RADIUS, RadSec, TLS and MAVIS.

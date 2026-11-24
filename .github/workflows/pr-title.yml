@@ -1,0 +1,68 @@
+# Copyright (C) 2026 TaranacLabs
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+#
+# THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+# IN NO EVENT SHALL ITS AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+# Checks the title of a pull request against the conventional commits
+# specification, the same check netztp runs.
+#
+# The title matters when a pull request is squash-merged because it becomes
+# the default commit message on master.
+#
+# Allowed types: build, chore, ci, docs, feat, fix, perf, refactor, release,
+# revert, style, test. Put the path the change touches in the scope, so the
+# subject line still says where the work is:
+#
+#     fix(tac_plus-ng/main.c): close the listener after a bind error
+#     test(tac_plus-ng/tests): cover RADIUS over DTLS
+#
+# The public action is pinned to the same revision used by nscaledev/actions.
+# Label changes are disabled: pull requests from forks have a read-only token,
+# but title validation itself needs no write access.
+
+name: pr-title
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-pr-title:
+    name: validate title
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Pull request title validation
+        uses: ytanikin/pr-conventional-commits@05b6c51a991169e3ae3fad39cde73d6bae7285ec
+        with:
+          task_types: '["build","chore","ci","docs","feat","fix","perf","refactor","release","revert","style","test"]'
+          add_label: "false"

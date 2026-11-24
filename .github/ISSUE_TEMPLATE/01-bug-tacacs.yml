@@ -1,0 +1,108 @@
+name: 🔑 TACACS+ bug
+description: tac_plus-ng refuses a login it should allow, permits the wrong command, or sends the wrong reply over TACACS+.
+title: "[TACACS+]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for TACACS+ traffic between a network device and
+        tac_plus-ng. RADIUS has its own form. If the daemon crashed or hung,
+        use the crash form instead.
+
+        > ⚠️ **Redact before posting.** A configuration file holds the shared
+        > key of every device and, in some setups, user passwords. `debug =
+        > USERINPUT` prints passwords in clear text. Replace each secret with
+        > `<redacted>`.
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Where does it go wrong?
+      description: The first stage that fails.
+      options:
+        - Connection (the device cannot connect, or the connection drops)
+        - TLS handshake
+        - Authentication (login, PAP, CHAP, enable, password change)
+        - Authorization (shell or exec profile, attributes returned)
+        - Command authorization
+        - Accounting
+        - Access control list or ruleset verdict
+        - Single connection mode / session multiplexing
+        - Not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      options:
+        - TACACS+ over TCP (port 49 or another plain port)
+        - TACACS+ over TLS
+        - TACACS+ over TLS with a pre-shared key (TLS-PSK)
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: Device or client
+      description: What talks to the daemon, and its software version.
+      placeholder: "Cisco IOS-XE 17.9.4 on a C9300, or tactester"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what did you expect?
+      placeholder: |
+        A user in group "neteng" is refused "show running-config". The profile
+        permits "show .*", so I expected the command to be authorized.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start the daemon with the configuration below
+        2. Log in to the switch as "alice"
+        3. Run "show running-config"
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: The smallest configuration that shows the problem. Remove every key and password first.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Daemon log
+      description: "Add `debug = AUTHEN AUTHOR CMD REGEX ACL` to the part of the configuration that fails, reproduce, then copy the syslog records (for example `journalctl -t tac_plus-ng`). Do not enable USERINPUT unless you have redacted the output."
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: client-output
+    attributes:
+      label: Device output
+      description: What the device showed, and its own AAA debug output if you have it.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The output of `tac_plus-ng -v`.
+      placeholder: "tac_plus-ng version 170ab88.../PCRE2/ARES 1.27.0/TLS/OpenSSL 3.0.13"
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and compiler
+      placeholder: "Ubuntu 24.04, gcc 13.2"
+    validations:
+      required: true

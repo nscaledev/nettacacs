@@ -1,0 +1,259 @@
+# Copyright (C) 2026 TaranacLabs
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+#
+# THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+# IN NO EVENT SHALL ITS AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+# Lints everything in the tree that is not C: the workflows, the shell
+# scripts, the Python and the Perl, plus a secret scan. The C is covered by
+# tac_plus-ng.yml, which builds it with -Werror and runs the tests under
+# AddressSanitizer and UndefinedBehaviorSanitizer.
+#
+# Every job here runs the same command a developer runs locally. The tool
+# versions are pinned and their archives checked, so a run today and a run in
+# six months report the same findings.
+
+name: lint
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # a newer push to a pull request replaces its run; runs on a branch all finish
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  ACTIONLINT_VERSION: 1.7.12
+  ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+  GITLEAKS_VERSION: 8.30.1
+  GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+  RUFF_VERSION: 0.17.6
+
+jobs:
+  workflows:
+    name: workflows
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install actionlint
+        run: |
+          set -eu
+          curl -fsSL -o actionlint.tar.gz \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "${ACTIONLINT_SHA256}  actionlint.tar.gz" | sha256sum -c -
+          tar -xzf actionlint.tar.gz actionlint
+
+      - name: actionlint
+        env:
+          # actionlint passes the body of every "run:" step to shellcheck.
+          # These three findings are deliberate in tac_plus-ng.yml:
+          #   SC2211  "build/*/tests-prefix/sbin/tac_plus-ng" is a glob in the
+          #           command position on purpose. The build directory carries
+          #           the platform and the branch, so its name is not known.
+          #   SC2086  $UBUNTU_PACKAGES has to split into one word per package.
+          #   SC2024  "sudo journalctl > file" writes the file as the runner
+          #           user, which is what the step wants.
+          SHELLCHECK_OPTS: -e SC2211 -e SC2086 -e SC2024
+        run: ./actionlint
+
+      # The runner image carries a python3, but not every library. Ask for the
+      # one the next step reads YAML with.
+      - run: python3 -m pip install --quiet --break-system-packages pyyaml
+
+      # actionlint reads .github/workflows and nothing else. The issue forms
+      # are YAML that GitHub parses when somebody opens the "New issue" page,
+      # so a broken one is only noticed by the person trying to file a bug.
+      - name: Issue forms and their configuration parse
+        run: |
+          set -eu
+          python3 - <<'PY'
+          import glob
+          import sys
+
+          import yaml
+
+          failed = False
+          for path in sorted(glob.glob(".github/ISSUE_TEMPLATE/*.yml")):
+              try:
+                  document = yaml.safe_load(open(path))
+              except yaml.YAMLError as error:
+                  print(f"{path}: {error}")
+                  failed = True
+                  continue
+              if path.endswith("config.yml"):
+                  continue
+              for key in ("name", "description", "body"):
+                  if key not in document:
+                      print(f"{path}: no {key}")
+                      failed = True
+              for field in document.get("body", []):
+                  if field.get("type") == "dropdown" and not field["attributes"].get("options"):
+                      print(f"{path}: dropdown {field.get('id')} has no options")
+                      failed = True
+          sys.exit(1 if failed else 0)
+          PY
+
+  shell:
+    name: shell scripts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      # shellcheck is part of the runner image, so there is nothing to install.
+      - run: shellcheck --version
+
+      - name: shellcheck
+        run: |
+          set -eu
+          # Every tracked *.sh, plus every tracked file whose first line is a
+          # /bin/sh or /bin/bash shebang. The SysV init scripts under */extra/
+          # are left out: they are kept in the shape the distributions that
+          # ship them expect, and that shape trips the POSIX checks ("echo -n",
+          # sourcing a path the checker cannot resolve).
+          git ls-files | while IFS= read -r f; do
+            case "$f" in */extra/*) continue ;; esac
+            case "$f" in *.sh) echo "$f"; continue ;; esac
+            [ -f "$f" ] || continue
+            case "$(head -n 1 -- "$f")" in
+              '#!'*/sh|'#!'*/bash|'#!'*env\ sh|'#!'*env\ bash) echo "$f" ;;
+            esac
+          done > "$RUNNER_TEMP/shell-files"
+
+          echo "linting:"
+          sed 's/^/  /' "$RUNNER_TEMP/shell-files"
+
+          # -s sh is the dialect for a file with no shebang. A shebang wins
+          # over it, so a bash script is still read as bash.
+          # -S warning hides the style notes and reports the rest.
+          xargs shellcheck -s sh -S warning -f gcc < "$RUNNER_TEMP/shell-files"
+
+  python:
+    name: python
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install "ruff==${RUFF_VERSION}"
+
+      # The rule selection and the exceptions are in .ruff.toml, next to the
+      # reason for each one. Run the same command locally.
+      - run: ruff check --output-format=github .
+
+      # The test suite states Python 3.8 as its floor (tac_plus-ng/tests/README).
+      # Nothing else holds that line, so check that every file still parses
+      # under the oldest interpreter the harness claims to support.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+
+      - name: The Python parses under 3.8
+        run: |
+          set -eu
+          git ls-files '*.py' > "$RUNNER_TEMP/python-files"
+          xargs python -m py_compile < "$RUNNER_TEMP/python-files"
+
+  perl:
+    name: perl
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      # The modules the back ends load at compile time. Optional modules that
+      # are not packages on Ubuntu have compile-only stand-ins below.
+      - name: Install the Perl modules the back ends use
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            libnet-ldap-perl libio-socket-ssl-perl libdbi-perl \
+            libauthen-radius-perl libnet-dns-perl libcryptx-perl \
+            libnet-rawip-perl
+
+      # mavis/perl/Mavis.pm is tracked, but it is generated: mk_Mavis.pl reads
+      # the #defines out of mavis/mavis.h. It can go stale without anybody
+      # noticing, so regenerate it and require the checked-in copy to match.
+      # perl -c below reads the checked-in one, so this has to come first.
+      - name: Mavis.pm matches mavis.h
+        run: |
+          set -eu
+          (cd mavis/perl && perl mk_Mavis.pl) > "$RUNNER_TEMP/Mavis.pm"
+          if ! diff -u mavis/perl/Mavis.pm "$RUNNER_TEMP/Mavis.pm"; then
+            echo "::error file=mavis/perl/Mavis.pm::Mavis.pm does not match mavis/mavis.h. Run 'cd mavis/perl && perl mk_Mavis.pl > Mavis.pm' and commit the result."
+            exit 1
+          fi
+
+      - name: perl -c
+        run: |
+          set -eu
+          rc=0
+          checked=0
+          for f in $(git ls-files '*.pl' '*.pm') configure; do
+            if out=$(perl -I .github/perl-stubs -MCompileOnly \
+              -I mavis/perl -I spawnd/perl -c "$f" 2>&1); then
+              checked=$((checked + 1))
+              continue
+            fi
+            echo "::error file=$f::perl -c failed"
+            printf '%s\n' "$out"
+            rc=1
+          done
+          echo "$checked checked"
+          exit $rc
+
+  secrets:
+    name: secrets
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # A shallow checkout, so the scan reads the working tree and not the
+      # history. Scanning the history would report the same old sample keys on
+      # every pull request, which buries a real one.
+      - uses: actions/checkout@v5
+
+      - name: Install gitleaks
+        run: |
+          set -eu
+          curl -fsSL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+
+      # The manuals, the samples and the test fixtures hold secrets on purpose.
+      # .gitleaks.toml identifies the exact fixtures and explains each one.
+      - run: ./gitleaks dir . --config .gitleaks.toml --redact --no-banner

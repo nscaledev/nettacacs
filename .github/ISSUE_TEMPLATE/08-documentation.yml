@@ -1,0 +1,44 @@
+name: 📝 Documentation
+description: Something in the manuals, the README or the sample configurations is wrong, missing, out of date or unclear.
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The manuals in `doc/` are generated. Fixes to the tac_plus-ng manual go
+        into `tac_plus-ng/doc/manual.xml`, not into `doc/tac_plus-ng.txt`.
+  - type: dropdown
+    id: section
+    attributes:
+      label: Where?
+      options:
+        - tac_plus-ng manual (doc/tac_plus-ng.txt, source tac_plus-ng/doc/manual.xml)
+        - MAVIS manual (doc/mavis.txt)
+        - spawnd manual (doc/spawnd.txt)
+        - tac_plus manual (doc/tac_plus.txt)
+        - ftpd, tcprelay or mavisd manual
+        - Active Directory how-to
+        - README, CONTRIBUTING or PREREQUISITES.txt
+        - Sample configurations (tac_plus-ng/sample)
+        - Test suite README
+        - Missing (no page covers this)
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Page and section
+      description: The file, and the section number or heading.
+      placeholder: "doc/tac_plus-ng.txt, section 4.14 Access Control Lists"
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or missing?
+      description: If the daemon and the manual disagree, say which one you believe is right.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested wording or fix

@@ -1,0 +1,31 @@
+# Ruff lints the Python in this tree: the test harness and its tests under
+# tac_plus-ng/tests, and the MAVIS back ends under mavis/python.
+#
+# The selection is the pyflakes rules (F) plus the pycodestyle errors that
+# catch real faults (E4 imports, E7 statements, E9 syntax and IO). Style and
+# formatting rules are left out on purpose: this tree is kept close to the
+# upstream project, and a reformat would conflict with every change pulled
+# from it.
+
+target-version = "py38"
+
+# The harness writes long assertions on one line rather than wrapping them.
+# Nothing enforces this, because E501 is not selected; it only keeps
+# "ruff format" from rewrapping the code if someone runs it.
+line-length = 150
+
+extend-exclude = ["build", "doc"]
+
+[lint]
+select = ["E4", "E7", "E9", "F"]
+
+[lint.per-file-ignores]
+# The MAVIS back ends follow the author's own style rather than PEP 8.
+"mavis/python/*" = ["E4", "E7"]
+
+# These two back ends read settings with eval_env(), which assigns into
+# globals(). A static reader cannot see those generated names. Keep F821
+# enabled for mavis.py and mavis_tacplus_demo_database.py, which do not use
+# dynamic globals.
+"mavis/python/mavis_tacplus_demo.py" = ["F821"]
+"mavis/python/mavis_tacplus_ldap.py" = ["F821"]
