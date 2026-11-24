@@ -1,0 +1,29 @@
+# gitleaks configuration for nettacacs.
+#
+# The manuals, samples and tests use three obviously synthetic PSK values. Two
+# sample files also contain the demo private keys they document. The allowlists
+# below match only those values and files; a different credential is reported
+# even when it appears beside a fixture.
+#
+# Run it the way CI does:
+#
+#     gitleaks dir . --config .gitleaks.toml --redact
+
+title = "nettacacs"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Synthetic PSKs used by the manuals, samples and tests"
+regexes = [
+  '''^0123456789(?:ab|abcdef|abcdef0123456789abcdef)$''',
+]
+
+[[allowlists]]
+description = "Private keys shipped solely as tcprelay TLS examples"
+targetRules = ["private-key"]
+paths = [
+  '''^tcprelay/sample/demo-unencrypted\.key$''',
+  '''^tcprelay/sample/demo\.key$''',
+]

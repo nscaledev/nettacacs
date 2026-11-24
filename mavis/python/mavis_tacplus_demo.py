@@ -52,11 +52,10 @@ FAULT
 
 """
 
-import os, sys, re, time
+import os, sys, time
 from mavis import ( Mavis,
 	MAVIS_DOWN, MAVIS_FINAL,
-	AV_V_RESULT_OK, AV_V_RESULT_ERROR, AV_V_RESULT_FAIL,
-	AV_V_RESULT_NOTFOUND
+	AV_V_RESULT_OK, AV_V_RESULT_ERROR, AV_V_RESULT_NOTFOUND
 )
 
 # A helper function to evaluate environment variables: #######################

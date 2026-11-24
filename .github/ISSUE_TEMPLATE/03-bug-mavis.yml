@@ -1,0 +1,130 @@
+name: 🔗 MAVIS back-end bug
+description: A MAVIS module or helper program returns the wrong result, hangs, or is never asked.
+title: "[MAVIS]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        MAVIS is the module chain that looks users up outside the configuration
+        file, for example in LDAP, Active Directory, PAM or another RADIUS
+        server. See [the MAVIS manual](https://github.com/nscaledev/nettacacs/blob/master/doc/mavis.txt).
+
+        > ⚠️ **Redact before posting.** A MAVIS configuration holds the bind
+        > password of the directory, and `debug = MAVIS` prints the attributes
+        > that pass through the chain. Replace each secret with `<redacted>`.
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module
+      description: The `mavis module = <type>` that misbehaves.
+      multiple: true
+      options:
+        - external
+        - external-mt
+        - groups
+        - cache
+        - tacinfo_cache
+        - limit
+        - tacauth_limit
+        - pam
+        - remote
+        - system
+        - userdb
+        - log
+        - tee
+        - "null"
+        - auth
+        - Not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: helper
+    attributes:
+      label: Helper program
+      description: The program behind an `external` or `external-mt` module, if there is one.
+      options:
+        - ldapmavis-mt
+        - pammavis
+        - pammavis-mt
+        - radmavis
+        - radmavis-mt
+        - A Perl script from mavis/perl
+        - A Python script from mavis/python
+        - A script of my own
+        - None
+    validations:
+      required: true
+  - type: dropdown
+    id: directory
+    attributes:
+      label: Directory or service behind it
+      options:
+        - Active Directory
+        - OpenLDAP
+        - Another LDAP server
+        - PAM (local accounts, shadow)
+        - Another RADIUS server
+        - A local database or file
+        - Not applicable
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of problem
+      options:
+        - Authentication fails for a user who should pass
+        - Authentication succeeds for a user who should fail
+        - Wrong group membership or wrong attributes returned
+        - Password change dialog is wrong or missing
+        - The module is never called
+        - The lookup hangs or times out
+        - A helper process is left behind, or the daemon runs out of them
+        - Caching returns a stale result
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: MAVIS configuration
+      description: The `mavis module` blocks and the `setenv` lines, with every password removed.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: mavistest
+    attributes:
+      label: Output of mavistest
+      description: "`mavistest` calls the chain without the daemon, which shows whether the fault is in the back end or in tac_plus-ng. Run `mavistest -d -1 <config> <id> TACPLUS <user> <password>`, then redact the password."
+      render: text
+  - type: textarea
+    id: logs
+    attributes:
+      label: Daemon log
+      description: "Add `debug = MAVIS AUTHEN` to the configuration, reproduce, then copy the syslog records (for example `journalctl -t tac_plus-ng`)."
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The output of `tac_plus-ng -v`.
+      placeholder: "tac_plus-ng version 170ab88.../PCRE2/ARES 1.27.0/TLS/OpenSSL 3.0.13"
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and compiler
+      placeholder: "Ubuntu 24.04, gcc 13.2"
+    validations:
+      required: true

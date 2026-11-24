@@ -95,7 +95,7 @@ MAVIS_INIT_ERR = 1
 MAVIS_INIT_OK = 0
 MAVIS_TIMEOUT = 3
 
-import sys, os, re
+import sys, re
 
 class Mavis:
 	def write(self, verdict, result, user_response):
